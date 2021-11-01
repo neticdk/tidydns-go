@@ -222,7 +222,7 @@ func (c *tidyDNSClient) FindRecord(ctx context.Context, zoneID int, name string,
 
 	result := make([]*RecordInfo, 0)
 	for _, r := range records {
-		if r.Type == rType {
+		if r.Type == rType && r.Name == name {
 			result = append(result, &RecordInfo{
 				ID:          r.ID,
 				Type:        r.Type,
