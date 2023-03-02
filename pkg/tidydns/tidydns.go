@@ -149,6 +149,10 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := c.client.Do(req)
+	if res != nil {
+		defer res.Body.Close()
+	}
+
 	if err != nil {
 		return 0, err
 	}
@@ -164,6 +168,10 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 	req.SetBasicAuth(c.username, c.password)
 
 	res, err = c.client.Do(req)
+	if res != nil {
+		defer res.Body.Close()
+	}
+
 	if err != nil {
 		return 0, err
 	}
@@ -203,6 +211,10 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := c.client.Do(req)
+	if res != nil {
+		defer res.Body.Close()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -287,6 +299,10 @@ func (c *tidyDNSClient) DeleteRecord(ctx context.Context, zoneID int, recordID i
 	req.SetBasicAuth(c.username, c.password)
 
 	res, err := c.client.Do(req)
+	if res != nil {
+		defer res.Body.Close()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -306,6 +322,10 @@ func (c *tidyDNSClient) getData(ctx context.Context, url string, value interface
 	req.SetBasicAuth(c.username, c.password)
 
 	res, err := c.client.Do(req)
+	if res != nil {
+		defer res.Body.Close()
+	}
+
 	if err != nil {
 		return err
 	}
