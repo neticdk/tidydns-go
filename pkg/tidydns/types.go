@@ -1,5 +1,33 @@
 package tidydns
 
+type dhcpSubnet struct {
+	ID         int `json:"id"`
+	VlanId     int `json:"vlan_id"`
+	VlanNo     int `json:"vlan_no"`
+	ZoneID     int `json:"zone_id"`
+	LocationID int `json:"location_id"`
+}
+
+type dhcpFreeIP struct {
+	Status int            `json:"status"`
+	Data   dhcpFreeIPData `json:"data"`
+}
+
+type dhcpFreeIPData struct {
+	IPAddress string `json:"ip_address"`
+}
+
+type interfaceCreate struct {
+	Status   interface{} `json:"status"`
+	ID       int         `json:"id"`
+	SubnetID int         `json:"subnet_id"`
+}
+
+type interfaceRead struct {
+	Name        string `json:"name"`
+	Destination string `json:"destination"`
+}
+
 type zoneInfo struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
