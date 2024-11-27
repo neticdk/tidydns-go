@@ -114,6 +114,9 @@ func (c *tidyDNSClient) GetSubnetIDs(ctx context.Context, subnetCIDR string) (*S
 	if err != nil {
 		return nil, err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -151,6 +154,9 @@ func (c *tidyDNSClient) GetFreeIP(ctx context.Context, subnetID int) (string, er
 	if err != nil {
 		return "", err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -173,7 +179,7 @@ func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo Crea
 		"location_id": {strconv.Itoa(createInfo.LocationID)},
 	}
 
-	var checkstring string = fmt.Sprintf("Key (destination)=(%s) already exists", createInfo.InterfaceIP)
+	var checkstring = fmt.Sprintf("Key (destination)=(%s) already exists", createInfo.InterfaceIP)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/=/dhcp_interface//new", c.baseURL), strings.NewReader(data.Encode()))
 	if err != nil {
@@ -182,7 +188,13 @@ func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo Crea
 	req.SetBasicAuth(c.username, c.password)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	res, _ := c.client.Do(req)
+	res, err := c.client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	if res.StatusCode != http.StatusOK {
 		bodyBytes, err := io.ReadAll(res.Body)
@@ -217,6 +229,9 @@ func (c *tidyDNSClient) ReadDHCPInterface(ctx context.Context, interfaceID int) 
 	if err != nil {
 		return nil, err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -249,6 +264,9 @@ func (c *tidyDNSClient) UpdateDHCPInterfaceName(ctx context.Context, interfaceID
 	if err != nil {
 		return 0, err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -274,6 +292,9 @@ func (c *tidyDNSClient) DeleteDHCPInterface(ctx context.Context, interfaceID int
 	if err != nil {
 		return err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -337,15 +358,12 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := c.client.Do(req)
-	if res != nil {
-		defer func(Body io.ReadCloser) {
-			_ = Body.Close()
-		}(res.Body)
-	}
-
 	if err != nil || res == nil {
 		return 0, err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -358,15 +376,12 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 	req.SetBasicAuth(c.username, c.password)
 
 	res, err = c.client.Do(req)
-	if res != nil {
-		defer func(Body io.ReadCloser) {
-			_ = Body.Close()
-		}(res.Body)
-	}
-
 	if err != nil || res == nil {
 		return 0, err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return 0, fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -403,15 +418,12 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := c.client.Do(req)
-	if res != nil {
-		defer func(Body io.ReadCloser) {
-			_ = Body.Close()
-		}(res.Body)
-	}
-
 	if err != nil || res == nil {
 		return err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -493,15 +505,12 @@ func (c *tidyDNSClient) DeleteRecord(ctx context.Context, zoneID int, recordID i
 	req.SetBasicAuth(c.username, c.password)
 
 	res, err := c.client.Do(req)
-	if res != nil {
-		defer func(Body io.ReadCloser) {
-			_ = Body.Close()
-		}(res.Body)
-	}
-
 	if err != nil || res == nil {
 		return err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
@@ -518,15 +527,12 @@ func (c *tidyDNSClient) getData(ctx context.Context, url string, value interface
 	req.SetBasicAuth(c.username, c.password)
 
 	res, err := c.client.Do(req)
-	if res != nil {
-		defer func(Body io.ReadCloser) {
-			_ = Body.Close()
-		}(res.Body)
-	}
-
 	if err != nil || res == nil {
 		return err
 	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
