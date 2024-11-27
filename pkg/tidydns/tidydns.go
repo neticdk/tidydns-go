@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -187,7 +187,7 @@ func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo Crea
 	res, _ := c.client.Do(req)
 
 	if res.StatusCode != http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(res.Body)
+		bodyBytes, err := io.ReadAll(res.Body)
 		bodyString := string(bodyBytes)
 		if err != nil {
 			return 0, err
@@ -340,10 +340,12 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 
 	res, err := c.client.Do(req)
 	if res != nil {
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
 	}
 
-	if err != nil {
+	if err != nil || res == nil {
 		return 0, err
 	}
 	if res.StatusCode != http.StatusOK {
@@ -359,10 +361,12 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 
 	res, err = c.client.Do(req)
 	if res != nil {
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
 	}
 
-	if err != nil {
+	if err != nil || res == nil {
 		return 0, err
 	}
 	if res.StatusCode != http.StatusOK {
@@ -402,10 +406,12 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 
 	res, err := c.client.Do(req)
 	if res != nil {
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
 	}
 
-	if err != nil {
+	if err != nil || res == nil {
 		return err
 	}
 	if res.StatusCode != http.StatusOK {
@@ -490,10 +496,12 @@ func (c *tidyDNSClient) DeleteRecord(ctx context.Context, zoneID int, recordID i
 
 	res, err := c.client.Do(req)
 	if res != nil {
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
 	}
 
-	if err != nil {
+	if err != nil || res == nil {
 		return err
 	}
 	if res.StatusCode != http.StatusOK {
@@ -513,10 +521,12 @@ func (c *tidyDNSClient) getData(ctx context.Context, url string, value interface
 
 	res, err := c.client.Do(req)
 	if res != nil {
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
 	}
 
-	if err != nil {
+	if err != nil || res == nil {
 		return err
 	}
 	if res.StatusCode != http.StatusOK {
