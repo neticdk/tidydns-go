@@ -118,8 +118,6 @@ func (c *tidyDNSClient) GetSubnetIDs(ctx context.Context, subnetCIDR string) (*S
 		return nil, fmt.Errorf("error from tidyDNS server: %s", res.Status)
 	}
 
-	// Check response code
-
 	var subnets []dhcpSubnet
 	err = json.NewDecoder(res.Body).Decode(&subnets)
 	if err != nil {
