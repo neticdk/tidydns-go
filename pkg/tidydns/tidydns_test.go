@@ -9,6 +9,207 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const subnetResponse = `[
+  {
+    "vlan_name": "netic-shared-k8s-utility01",
+    "created_date": "2021-04-16 14:46:46",
+    "modified_by": "mef",
+    "vlan_id": 959,
+    "loc_name": "internal",
+    "subnet_nice_name": "10.68.0.128/26 - netic-shared-k8s-utility01-v4",
+    "dhcp_failover": 1,
+    "vlan": "534 netic-shared-k8s-utility01",
+    "status": 0,
+    "dhcp_active": 0,
+    "location_id": 1,
+    "description": null,
+    "id": 1185,
+    "modified_date": "2021-07-08 10:38:02",
+    "name": "netic-shared-k8s-utility01-v4",
+    "subnet": "10.68.0.128/26",
+    "zone": "k8s.netic.dk",
+    "customer_id": 0,
+    "family": 4,
+    "zone_id": 2861,
+    "vmps_active": 0,
+    "shared_network": null,
+    "icons": "<i class=\"fa fa-circle-o fa-fw\" title=\"DHCP Deactive\"></i><i class=\"fa fa-circle-o fa-fw\" title=\"VMPS Deactive\"></i>",
+    "vlan_no": 534
+  }
+]`
+
+const freeIPResponse = `{
+  "status": 0,
+  "data": {
+    "name_suggestion": "netic-shared-k8s-utility01-v4-134",
+    "last_octet": "134",
+    "ip_address": "10.68.0.134"
+  }
+}`
+
+const createResponseV1 = `{
+  "status": "0",
+  "id": 30641,
+  "subnet_id": 1185
+}`
+
+const createResponseV2 = `{
+  "status": 0,
+  "id": 30641,
+  "subnet_id": 1185
+}`
+
+const readResponse = `{
+  "brother_id": null,
+  "id": 30641,
+  "extra_ip": 0,
+  "address_id": 63573,
+  "subnet_id": 1185,
+  "modified_date": "2021-07-08",
+  "subnet": "10.68.0.128/26",
+  "mac_addr": null,
+  "destination": "10.68.0.134",
+  "fqdn_namehelper": null,
+  "vlan_id": 959,
+  "icons": "<i class=\"fa fa-circle-o fa-fw\" title=\"DHCP Deactive\"></i><i class=\"fa fa-circle-o fa-fw\" title=\"VMPS Deactive\"></i><i class=\"fa fa-circle fa-fw\" title=\"DNS Active\"></i>",
+  "description": "",
+  "aliases": "",
+  "type": 1,
+  "dhcp_active": 0,
+  "subnet_name": "netic-shared-k8s-utility01-v4",
+  "ip_family": 4,
+  "is_template": 0,
+  "zone": "k8s.netic.dk",
+  "name": "test-tal",
+  "modified_by": "tal",
+  "customer_id_inherited": 0,
+  "customer_id": null,
+  "vlan_name": "netic-shared-k8s-utility01",
+  "star": "<i class=\"fa fa-star-o fa-lg\" title=\"Click to Set Interface as Template\"></i>",
+  "vmps_active": 0,
+  "vlan_no": 534,
+  "record_id": 30641,
+  "ip_address": "10.68.0.134",
+  "status": 0,
+  "fqdn_name": "test-tal.k8s.netic.dk",
+  "seen_date": null,
+  "fqdn": "test-tal.k8s.netic.dk",
+  "location_id": 1,
+  "dual_stack": "",
+  "zone_id": 2861,
+  "brother_destination": null
+}`
+
+func TestGetSubnetIDs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "10.68.0.128/26", req.URL.Query().Get("subnet"))
+		assert.Equal(t, "GET", req.Method)
+		rw.Write([]byte(subnetResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	ids, err := c.GetSubnetIDs(context.Background(), "10.68.0.128/26")
+	assert.NoError(t, err)
+	assert.Equal(t, 1185, ids.SubnetID)
+	assert.Equal(t, 2861, ids.ZoneID)
+	assert.Equal(t, 534, ids.VlanNo)
+}
+
+func TestGetFreeIP(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Contains(t, req.URL.Path, "1185")
+		assert.Equal(t, "GET", req.Method)
+		rw.Write([]byte(freeIPResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	ip, err := c.GetFreeIP(context.Background(), 1185)
+	assert.NoError(t, err)
+	assert.Equal(t, "10.68.0.134", ip)
+}
+
+func TestCreateDHCPInterfaceV1(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "POST", req.Method)
+		rw.Write([]byte(createResponseV1))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	createInfo := CreateInfo{
+		SubnetID:      1185,
+		ZoneID:        2861,
+		InterfaceIP:   "8.8.8.8",
+		InterfaceName: "unittest",
+	}
+	id, err := c.CreateDHCPInterface(context.Background(), createInfo)
+	assert.NoError(t, err)
+	assert.Equal(t, 30641, id)
+}
+
+func TestCreateDHCPInterfaceV2(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "POST", req.Method)
+		rw.Write([]byte(createResponseV2))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	createInfo := CreateInfo{
+		SubnetID:      1185,
+		ZoneID:        2861,
+		InterfaceIP:   "8.8.8.8",
+		InterfaceName: "unittest",
+	}
+	id, err := c.CreateDHCPInterface(context.Background(), createInfo)
+	assert.NoError(t, err)
+	assert.Equal(t, 30641, id)
+}
+
+func TestReadDHCPInterface(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "30641", req.URL.Query().Get("id"))
+		assert.Equal(t, "GET", req.Method)
+		rw.Write([]byte(readResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	info, err := c.ReadDHCPInterface(context.Background(), 30641)
+	assert.NoError(t, err)
+	assert.Equal(t, "10.68.0.134", info.InterfaceIP)
+	assert.Equal(t, "test-tal", info.Interfacename)
+}
+
+func TestUpdateDHCPInterfaceName(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Contains(t, req.URL.Path, "30641")
+		assert.Equal(t, "POST", req.Method)
+		rw.Write([]byte(createResponseV1))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	id, err := c.UpdateDHCPInterfaceName(context.Background(), 30641, "test-tal-update")
+	assert.NoError(t, err)
+	assert.Equal(t, 30641, id)
+}
+
+func TestDeleteDHCPInterface(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Contains(t, req.URL.Path, "30641")
+		assert.Equal(t, "DELETE", req.Method)
+		rw.Write([]byte(createResponseV1))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	err := c.DeleteDHCPInterface(context.Background(), 30641)
+	assert.NoError(t, err)
+}
+
 func TestFindZoneID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Query().Get("name"), "hackerdays.trifork.dev")
