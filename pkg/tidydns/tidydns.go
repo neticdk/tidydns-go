@@ -86,6 +86,8 @@ const (
 	RecordTypeCAA   RecordType = 10
 )
 
+const errorTidyDNS = "error from tidyDNS server: %s"
+
 type tidyDNSClient struct {
 	client   *http.Client
 	username string
@@ -118,7 +120,7 @@ func (c *tidyDNSClient) GetSubnetIDs(ctx context.Context, subnetCIDR string) (*S
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return nil, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	var subnets []dhcpSubnet
@@ -158,7 +160,7 @@ func (c *tidyDNSClient) GetFreeIP(ctx context.Context, subnetID int) (string, er
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return "", fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	var freeIP dhcpFreeIP
@@ -205,7 +207,7 @@ func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo Crea
 		if strings.Contains(bodyString, checkstring) {
 			return 1, fmt.Errorf("try again")
 		}
-		return 0, fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return 0, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	var createResp interfaceCreate
@@ -233,7 +235,7 @@ func (c *tidyDNSClient) ReadDHCPInterface(ctx context.Context, interfaceID int) 
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return nil, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	var interfaceRead interfaceRead
@@ -268,7 +270,7 @@ func (c *tidyDNSClient) UpdateDHCPInterfaceName(ctx context.Context, interfaceID
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return 0, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	var createResp interfaceCreate
@@ -296,7 +298,7 @@ func (c *tidyDNSClient) DeleteDHCPInterface(ctx context.Context, interfaceID int
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	return nil
@@ -365,7 +367,7 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return 0, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	req, err = http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/=/record_merged?zone_id=%d", c.baseURL, zoneID), nil)
@@ -383,7 +385,7 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return 0, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	var records []recordList
@@ -425,7 +427,7 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	return nil
@@ -512,7 +514,7 @@ func (c *tidyDNSClient) DeleteRecord(ctx context.Context, zoneID int, recordID i
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	return nil
@@ -534,7 +536,7 @@ func (c *tidyDNSClient) getData(ctx context.Context, url string, value interface
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("error from tidyDNS server: %s", res.Status)
+		return fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
 	err = json.NewDecoder(res.Body).Decode(value)
