@@ -1,6 +1,6 @@
 module github.com/neticdk/tidydns-go
 
-go 1.21
+go 1.23
 
 require github.com/stretchr/testify v1.8.4
 
@@ -12,5 +12,3 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-//replace golang.org/x/net => golang.org/x/net v0.0.0-20210917221730-978cfadd31cf
