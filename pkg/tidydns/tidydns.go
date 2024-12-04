@@ -81,11 +81,11 @@ type UserInfo struct {
 }
 
 type UserInfoGroup struct {
-	GroupName   string
-	Name        string
-	Notes       *string
-	Id          int
-	Description *string
+	GroupName   string  `json:"groupname"`
+	Name        string  `json:"name"`
+	Notes       *string `json:"notes,omitempty"`
+	Id          int     `json:"id"`
+	Description *string `json:"description,omitempty"`
 }
 
 type UserID int
@@ -218,17 +218,6 @@ func (c *tidyDNSClient) GetInternalUser(ctx context.Context, userID UserID) (*Us
 		return nil, err
 	}
 
-	var groups = make([]UserInfoGroup, 0, len(user.Groups))
-	for _, group := range user.Groups {
-		groups = append(groups, UserInfoGroup{
-			GroupName:   group.GroupName,
-			Name:        group.Name,
-			Notes:       group.Notes,
-			Id:          group.Id,
-			Description: group.Description,
-		})
-	}
-
 	modifiedDate, err := time.Parse(time.DateTime, user.ModifiedDate)
 	if err != nil {
 		return nil, err
@@ -258,7 +247,7 @@ func (c *tidyDNSClient) GetInternalUser(ctx context.Context, userID UserID) (*Us
 		Name:              user.Name,
 		PasswdChangedDate: passwordChangedDate,
 		Id:                UserID(user.Id),
-		Groups:            groups,
+		Groups:            user.Groups,
 	}, nil
 }
 
