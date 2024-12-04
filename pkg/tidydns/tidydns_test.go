@@ -110,7 +110,7 @@ func TestGetSubnetIDs(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "10.68.0.128/26", req.URL.Query().Get("subnet"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(subnetResponse))
+		_, _ = rw.Write([]byte(subnetResponse))
 	}))
 	defer server.Close()
 
@@ -126,7 +126,7 @@ func TestGetFreeIP(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Path, "1185")
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(freeIPResponse))
+		_, _ = rw.Write([]byte(freeIPResponse))
 	}))
 	defer server.Close()
 
@@ -139,7 +139,7 @@ func TestGetFreeIP(t *testing.T) {
 func TestCreateDHCPInterfaceV1(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(createResponseV1))
+		_, _ = rw.Write([]byte(createResponseV1))
 	}))
 	defer server.Close()
 
@@ -158,7 +158,7 @@ func TestCreateDHCPInterfaceV1(t *testing.T) {
 func TestCreateDHCPInterfaceV2(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(createResponseV2))
+		_, _ = rw.Write([]byte(createResponseV2))
 	}))
 	defer server.Close()
 
@@ -178,7 +178,7 @@ func TestReadDHCPInterface(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "30641", req.URL.Query().Get("id"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(readResponse))
+		_, _ = rw.Write([]byte(readResponse))
 	}))
 	defer server.Close()
 
@@ -193,7 +193,7 @@ func TestUpdateDHCPInterfaceName(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Path, "30641")
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(createResponseV1))
+		_, _ = rw.Write([]byte(createResponseV1))
 	}))
 	defer server.Close()
 
@@ -207,7 +207,7 @@ func TestDeleteDHCPInterface(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Path, "30641")
 		assert.Equal(t, "DELETE", req.Method)
-		rw.Write([]byte(createResponseV1))
+		_, _ = rw.Write([]byte(createResponseV1))
 	}))
 	defer server.Close()
 
@@ -220,7 +220,7 @@ func TestFindZoneID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Query().Get("name"), "hackerdays.trifork.dev")
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(zoneSearchResponse))
+		_, _ = rw.Write([]byte(zoneSearchResponse))
 	}))
 	defer server.Close()
 
@@ -232,7 +232,7 @@ func TestFindZoneID(t *testing.T) {
 
 func TestCreateRecord(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte(readRecordListResponse))
+		_, _ = rw.Write([]byte(readRecordListResponse))
 	}))
 	defer server.Close()
 
@@ -253,7 +253,7 @@ func TestReadRecord(t *testing.T) {
 		assert.Contains(t, req.URL.Path, "2861")
 		assert.Contains(t, req.URL.Path, "64694")
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(readRecordResponse))
+		_, _ = rw.Write([]byte(readRecordResponse))
 	}))
 	defer server.Close()
 
@@ -272,7 +272,7 @@ func TestDeleteRecord(t *testing.T) {
 		assert.Contains(t, req.URL.Path, "2861")
 		assert.Contains(t, req.URL.Path, "64694")
 		assert.Equal(t, "DELETE", req.Method)
-		rw.Write([]byte(createResponse))
+		_, _ = rw.Write([]byte(createResponse))
 	}))
 	defer server.Close()
 
@@ -284,7 +284,7 @@ func TestDeleteRecord(t *testing.T) {
 func TestUpdateRecord(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(readRecordListResponse))
+		_, _ = rw.Write([]byte(readRecordListResponse))
 	}))
 	defer server.Close()
 
@@ -302,7 +302,7 @@ func TestFindRecord(t *testing.T) {
 		assert.Equal(t, "prod1-api.trifork.shared", req.URL.Query().Get("name"))
 		assert.Equal(t, "2861", req.URL.Query().Get("zone"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(findRecordResponse))
+		_, _ = rw.Write([]byte(findRecordResponse))
 	}))
 	defer server.Close()
 
@@ -316,7 +316,7 @@ func TestFindRecord(t *testing.T) {
 func TestListZones(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(listZonesResponse))
+		_, _ = rw.Write([]byte(listZonesResponse))
 	}))
 	defer server.Close()
 
@@ -330,7 +330,7 @@ func TestListRecords(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "2861", req.URL.Query().Get("zone_id"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(listRecordsResponse))
+		_, _ = rw.Write([]byte(listRecordsResponse))
 	}))
 	defer server.Close()
 
@@ -351,7 +351,7 @@ func TestCreateInternalUser(t *testing.T) {
 		assert.Equal(t, "0", req.PostForm.Get("change_password_on_first_login"))
 		assert.Equal(t, "1", req.PostForm.Get("auth_group"))
 		assert.Equal(t, "", req.PostForm.Get("user_allow"))
-		rw.Write([]byte(userCreateResponse))
+		_, _ = rw.Write([]byte(userCreateResponse))
 	}))
 	defer server.Close()
 
@@ -373,7 +373,7 @@ func TestGetInternalUser(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "/=/user/144", req.URL.Path)
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(userReadResponse))
+		_, _ = rw.Write([]byte(userReadResponse))
 	}))
 	defer server.Close()
 
@@ -412,7 +412,7 @@ func TestUpdateInternalUser(t *testing.T) {
 		assert.Equal(t, "1", req.PostForm.Get("auth_group"))
 		assert.Equal(t, "", req.PostForm.Get("user_allow"))
 		assert.Equal(t, "desc", req.PostForm.Get("description"))
-		rw.Write([]byte(userUpdateResponse))
+		_, _ = rw.Write([]byte(userUpdateResponse))
 	}))
 	defer server.Close()
 
@@ -432,7 +432,7 @@ func TestDeleteInternalUser(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "/=/user/144", req.URL.Path)
 		assert.Equal(t, "DELETE", req.Method)
-		rw.Write([]byte(userDeleteResponse))
+		_, _ = rw.Write([]byte(userDeleteResponse))
 	}))
 	defer server.Close()
 
