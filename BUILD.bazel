@@ -1,4 +1,4 @@
-load("@gazelle//:def.bzl", "gazelle")
+load("@bazel_gazelle//:def.bzl", "gazelle")
 
 # gazelle:build_file_name BUILD,BUILD.bazel
 # gazelle:go_naming_convention go_default_library
