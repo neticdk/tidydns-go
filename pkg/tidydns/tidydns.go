@@ -157,7 +157,13 @@ func (c *tidyDNSClient) CreateInternalUser(ctx context.Context, username string,
 		"user_allow": userAllowFormatted,
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/=/user/new", c.baseURL), strings.NewReader(data.Encode()))
+	newUserUrl := fmt.Sprintf("%s/=/user/new", c.baseURL)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"POST",
+		newUserUrl,
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -191,10 +197,11 @@ func (c *tidyDNSClient) CreateInternalUser(ctx context.Context, username string,
 }
 
 func (c *tidyDNSClient) GetInternalUser(ctx context.Context, userID UserID) (*UserInfo, error) {
+	userLookupUrl := fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID)))
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"GET",
-		fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID))),
+		userLookupUrl,
 		nil,
 	)
 	if err != nil {
@@ -280,10 +287,11 @@ func (c *tidyDNSClient) UpdateInternalUser(ctx context.Context, userID UserID, p
 		data["user_allow"] = userAllowFormatted
 	}
 
+	userLookupUrl := fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID)))
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"POST",
-		fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID))),
+		userLookupUrl,
 		strings.NewReader(data.Encode()),
 	)
 	if err != nil {
@@ -311,10 +319,11 @@ func (c *tidyDNSClient) UpdateInternalUser(ctx context.Context, userID UserID, p
 }
 
 func (c *tidyDNSClient) DeleteInternalUser(ctx context.Context, userID UserID) error {
+	userLookupUrl := fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID)))
 	req, err := http.NewRequestWithContext(
 		ctx,
 		"DELETE",
-		fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID))),
+		userLookupUrl,
 		nil,
 	)
 	if err != nil {
@@ -351,7 +360,13 @@ func closeResponse(resp *http.Response) {
 }
 
 func (c *tidyDNSClient) GetSubnetIDs(ctx context.Context, subnetCIDR string) (*SubnetIDs, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/=/dhcp_subnet?subnet=%s", c.baseURL, subnetCIDR), nil)
+	dhcpSubnetUrl := fmt.Sprintf("%s/=/dhcp_subnet?subnet=%s", c.baseURL, subnetCIDR)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		dhcpSubnetUrl,
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +404,13 @@ func (c *tidyDNSClient) GetSubnetIDs(ctx context.Context, subnetCIDR string) (*S
 }
 
 func (c *tidyDNSClient) GetFreeIP(ctx context.Context, subnetID int) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/=/dhcp_subnet_free_ip/%d", c.baseURL, subnetID), nil)
+	dhcpFreeIPUrl := fmt.Sprintf("%s/=/dhcp_subnet_free_ip/%d", c.baseURL, subnetID)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		dhcpFreeIPUrl,
+		nil,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -425,7 +446,13 @@ func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo Crea
 
 	var checkstring = fmt.Sprintf("Key (destination)=(%s) already exists", createInfo.InterfaceIP)
 
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/=/dhcp_interface//new", c.baseURL), strings.NewReader(data.Encode()))
+	dhcpInterfaceNewUrl := fmt.Sprintf("%s/=/dhcp_interface//new", c.baseURL)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"POST",
+		dhcpInterfaceNewUrl,
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -460,7 +487,13 @@ func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo Crea
 }
 
 func (c *tidyDNSClient) ReadDHCPInterface(ctx context.Context, interfaceID int) (*InterfaceInfo, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/=/dhcp_interface/?id=%d", c.baseURL, interfaceID), nil)
+	dhcpInterfaceReadUrl := fmt.Sprintf("%s/=/dhcp_interface/?id=%d", c.baseURL, interfaceID)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		dhcpInterfaceReadUrl,
+		nil,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -493,7 +526,13 @@ func (c *tidyDNSClient) UpdateDHCPInterfaceName(ctx context.Context, interfaceID
 		"name": {interfaceName},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/=/dhcp_interface//%d", c.baseURL, interfaceID), strings.NewReader(data.Encode()))
+	dhcpInterfaceLookupUrl := fmt.Sprintf("%s/=/dhcp_interface//%d", c.baseURL, interfaceID)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"POST",
+		dhcpInterfaceLookupUrl,
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -519,7 +558,13 @@ func (c *tidyDNSClient) UpdateDHCPInterfaceName(ctx context.Context, interfaceID
 }
 
 func (c *tidyDNSClient) DeleteDHCPInterface(ctx context.Context, interfaceID int) error {
-	req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf("%s/=/dhcp_interface/%d", c.baseURL, interfaceID), nil)
+	dhcpInterfaceLookupUrl := fmt.Sprintf("%s/=/dhcp_interface/%d", c.baseURL, interfaceID)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"DELETE",
+		dhcpInterfaceLookupUrl,
+		nil,
+	)
 	if err != nil {
 		return err
 	}
@@ -540,7 +585,12 @@ func (c *tidyDNSClient) DeleteDHCPInterface(ctx context.Context, interfaceID int
 
 func (c *tidyDNSClient) ListZones(ctx context.Context) ([]*ZoneInfo, error) {
 	var zones []zoneInfo
-	err := c.getData(ctx, fmt.Sprintf("%s/=/zone?type=json", c.baseURL), &zones)
+	zoneListUrl := fmt.Sprintf("%s/=/zone?type=json", c.baseURL)
+	err := c.getData(
+		ctx,
+		zoneListUrl,
+		&zones,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -557,7 +607,12 @@ func (c *tidyDNSClient) ListZones(ctx context.Context) ([]*ZoneInfo, error) {
 
 func (c *tidyDNSClient) FindZoneID(ctx context.Context, name string) (int, error) {
 	var zones []zoneInfo
-	err := c.getData(ctx, fmt.Sprintf("%s/=/zone?type=json&name=%s", c.baseURL, name), &zones)
+	zoneLookupUrl := fmt.Sprintf("%s/=/zone?type=json&name=%s", c.baseURL, name)
+	err := c.getData(
+		ctx,
+		zoneLookupUrl,
+		&zones,
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -586,7 +641,13 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 		"location_id": {strconv.Itoa(int(info.Location))},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/=/record/new/%d", c.baseURL, zoneID), strings.NewReader(data.Encode()))
+	newRecordUrl := fmt.Sprintf("%s/=/record/new/%d", c.baseURL, zoneID)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"POST",
+		newRecordUrl,
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -602,7 +663,13 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 		return 0, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
-	req, err = http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/=/record_merged?zone_id=%d", c.baseURL, zoneID), nil)
+	recordMergeUrl := fmt.Sprintf("%s/=/record_merged?zone_id=%d", c.baseURL, zoneID)
+	req, err = http.NewRequestWithContext(
+		ctx,
+		"GET",
+		recordMergeUrl,
+		nil,
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -642,7 +709,13 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 		"location_id": {strconv.Itoa(int(info.Location))},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/=/record/%d/%d", c.baseURL, recordID, zoneID), strings.NewReader(data.Encode()))
+	zoneLookupUrl := fmt.Sprintf("%s/=/record/%d/%d", c.baseURL, recordID, zoneID)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"POST",
+		zoneLookupUrl,
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return err
 	}
@@ -663,7 +736,12 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 
 func (c *tidyDNSClient) FindRecord(ctx context.Context, zoneID int, name string, rType RecordType) ([]*RecordInfo, error) {
 	var records []recordList
-	err := c.getData(ctx, fmt.Sprintf("%s/=/record?type=json&zone=%d&name=%s", c.baseURL, zoneID, name), &records)
+	recordLookupUrl := fmt.Sprintf("%s/=/record?type=json&zone=%d&name=%s", c.baseURL, zoneID, name)
+	err := c.getData(
+		ctx,
+		recordLookupUrl,
+		&records,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -687,7 +765,12 @@ func (c *tidyDNSClient) FindRecord(ctx context.Context, zoneID int, name string,
 
 func (c *tidyDNSClient) ListRecords(ctx context.Context, zoneID int) ([]*RecordInfo, error) {
 	var records []recordList
-	err := c.getData(ctx, fmt.Sprintf("%s/=/record_merged?type=json&zone_id=%d&showall=1", c.baseURL, zoneID), &records)
+	recordMergeUrl := fmt.Sprintf("%s/=/record_merged?type=json&zone_id=%d&showall=1", c.baseURL, zoneID)
+	err := c.getData(
+		ctx,
+		recordMergeUrl,
+		&records,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -709,7 +792,12 @@ func (c *tidyDNSClient) ListRecords(ctx context.Context, zoneID int) ([]*RecordI
 
 func (c *tidyDNSClient) ReadRecord(ctx context.Context, zoneID int, recordID int) (*RecordInfo, error) {
 	var record recordRead
-	err := c.getData(ctx, fmt.Sprintf("%s/=/record/%d/%d", c.baseURL, zoneID, recordID), &record)
+	recordLookupUrl := fmt.Sprintf("%s/=/record/%d/%d", c.baseURL, zoneID, recordID)
+	err := c.getData(
+		ctx,
+		recordLookupUrl,
+		&record,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -727,7 +815,13 @@ func (c *tidyDNSClient) ReadRecord(ctx context.Context, zoneID int, recordID int
 }
 
 func (c *tidyDNSClient) DeleteRecord(ctx context.Context, zoneID int, recordID int) error {
-	req, err := http.NewRequestWithContext(ctx, "DELETE", fmt.Sprintf("%s/=/record/%d/%d", c.baseURL, recordID, zoneID), nil)
+	recordLookupUrl := fmt.Sprintf("%s/=/record/%d/%d", c.baseURL, recordID, zoneID)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"DELETE",
+		recordLookupUrl,
+		nil,
+	)
 	if err != nil {
 		return err
 	}
