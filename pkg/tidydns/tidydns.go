@@ -87,6 +87,8 @@ const (
 )
 
 const errorTidyDNS = "error from tidyDNS server: %s"
+const headerContentType = "Content-Type"
+const mimeForm = "application/x-www-form-urlencoded"
 
 type tidyDNSClient struct {
 	client   *http.Client
@@ -188,7 +190,7 @@ func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo Crea
 		return 0, err
 	}
 	req.SetBasicAuth(c.username, c.password)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set(headerContentType, mimeForm)
 
 	res, err := c.client.Do(req)
 	if err != nil {
@@ -260,7 +262,7 @@ func (c *tidyDNSClient) UpdateDHCPInterfaceName(ctx context.Context, interfaceID
 		return 0, err
 	}
 	req.SetBasicAuth(c.username, c.password)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set(headerContentType, mimeForm)
 
 	res, err := c.client.Do(req)
 	if err != nil {
@@ -357,7 +359,7 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 		return 0, err
 	}
 	req.SetBasicAuth(c.username, c.password)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set(headerContentType, mimeForm)
 
 	res, err := c.client.Do(req)
 	if err != nil || res == nil {
@@ -417,7 +419,7 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 		return err
 	}
 	req.SetBasicAuth(c.username, c.password)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set(headerContentType, mimeForm)
 
 	res, err := c.client.Do(req)
 	if err != nil || res == nil {
