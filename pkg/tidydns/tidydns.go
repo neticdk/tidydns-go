@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type TidyDNSClient interface {
@@ -26,6 +27,10 @@ type TidyDNSClient interface {
 	FindRecord(ctx context.Context, zoneID int, name string, rType RecordType) ([]*RecordInfo, error)
 	ListRecords(ctx context.Context, zoneID int) ([]*RecordInfo, error)
 	DeleteRecord(ctx context.Context, zoneID int, recordID int) error
+	CreateInternalUser(ctx context.Context, username string, password string, description string, changePasswordOnFirstLogin bool, authGroup AuthGroup, userAllow []UserAllowID) (UserID, error)
+	GetInternalUser(ctx context.Context, userID UserID) (*UserInfo, error)
+	UpdateInternalUser(ctx context.Context, userID UserID, password *string, description *string, authGroup *AuthGroup, userAllow []UserAllowID) error
+	DeleteInternalUser(ctx context.Context, userID UserID) error
 }
 
 type ZoneInfo struct {
@@ -63,9 +68,32 @@ type RecordInfo struct {
 	Location    LocationID
 }
 
+type UserInfo struct {
+	ModifiedBy        string
+	Description       string
+	ModifiedDate      time.Time
+	Username          string
+	AuthGroup         AuthGroup
+	Name              string
+	PasswdChangedDate time.Time
+	Id                UserID
+	Groups            []UserInfoGroup
+}
+
+type UserInfoGroup struct {
+	GroupName   string
+	Name        string
+	Notes       *string
+	Id          int
+	Description *string
+}
+
+type UserID int
 type LocationID int
 type RecordType int
 type RecordStatus int
+type AuthGroup int
+type UserAllowID int
 
 //goland:noinspection GoUnusedConst
 const (
@@ -84,6 +112,9 @@ const (
 	RecordTypeSSHFP RecordType = 8
 	RecordTypeTLSA  RecordType = 9
 	RecordTypeCAA   RecordType = 10
+
+	AuthGroupUser       AuthGroup = 2
+	AuthGroupSuperAdmin AuthGroup = 1
 )
 
 const errorTidyDNS = "error from tidyDNS server: %s"
@@ -95,6 +126,232 @@ type tidyDNSClient struct {
 	username string
 	password string
 	baseURL  string
+}
+
+func (c *tidyDNSClient) CreateInternalUser(ctx context.Context, username string, password string, description string, changePasswordOnFirstLogin bool, authGroup AuthGroup, userAllow []UserAllowID) (UserID, error) {
+	var userAllowFormatted []string
+	if len(userAllow) > 0 {
+		userAllowFormatted = make([]string, 0, len(userAllowFormatted))
+		for _, id := range userAllow {
+			userAllowFormatted = append(userAllowFormatted, strconv.Itoa(int(id)))
+		}
+	} else {
+		userAllowFormatted = []string{""}
+	}
+
+	var changePasswordOnFirstLoginFormatted string
+	if changePasswordOnFirstLogin {
+		changePasswordOnFirstLoginFormatted = "1"
+	} else {
+		changePasswordOnFirstLoginFormatted = "0"
+	}
+
+	data := url.Values{
+		"username":                       {username},
+		"epassword":                      {password},
+		"epassword_verify":               {password},
+		"change_password_on_first_login": {changePasswordOnFirstLoginFormatted},
+		"description":                    {description},
+		"auth_group":                     {strconv.Itoa(int(authGroup))},
+		//"tmp_auth_group":                 {""},
+		"user_allow": userAllowFormatted,
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/=/user/new", c.baseURL), strings.NewReader(data.Encode()))
+	if err != nil {
+		return 0, err
+	}
+	req.SetBasicAuth(c.username, c.password)
+	req.Header.Set(headerContentType, mimeForm)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		bodyBytes, err := io.ReadAll(res.Body)
+		bodyString := string(bodyBytes)
+		if err != nil {
+			return 0, err
+		}
+		if strings.Contains(bodyString, fmt.Sprintf("Key (username)=(%s) already exists", username)) {
+			return 0, fmt.Errorf("username already exists")
+		}
+		return 0, fmt.Errorf(errorTidyDNS, res.Status)
+	}
+
+	var user userCreate
+	err = json.NewDecoder(res.Body).Decode(&user)
+	if err != nil {
+		return 0, err
+	}
+
+	return UserID(user.Data.Id), nil
+}
+
+func (c *tidyDNSClient) GetInternalUser(ctx context.Context, userID UserID) (*UserInfo, error) {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID))),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.username, c.password)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(errorTidyDNS, res.Status)
+	}
+
+	var user userRead
+	err = json.NewDecoder(res.Body).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	var groups = make([]UserInfoGroup, 0, len(user.Groups))
+	for _, group := range user.Groups {
+		groups = append(groups, UserInfoGroup{
+			GroupName:   group.GroupName,
+			Name:        group.Name,
+			Notes:       group.Notes,
+			Id:          group.Id,
+			Description: group.Description,
+		})
+	}
+
+	modifiedDate, err := time.Parse(time.DateTime, user.ModifiedDate)
+	if err != nil {
+		return nil, err
+	}
+
+	passwordChangedDate, err := time.Parse(time.DateTime, user.PasswdChangedDate)
+	if err != nil {
+		return nil, err
+	}
+
+	var ag AuthGroup
+	switch user.AuthGroup {
+	case "User":
+		ag = AuthGroupUser
+	case "SuperAdmin":
+		ag = AuthGroupSuperAdmin
+	default:
+		return nil, fmt.Errorf("unknown auth group")
+	}
+
+	return &UserInfo{
+		ModifiedBy:        user.ModifiedBy,
+		Description:       user.Description,
+		ModifiedDate:      modifiedDate,
+		Username:          user.Username,
+		AuthGroup:         ag,
+		Name:              user.Name,
+		PasswdChangedDate: passwordChangedDate,
+		Id:                UserID(user.Id),
+		Groups:            groups,
+	}, nil
+}
+
+func (c *tidyDNSClient) UpdateInternalUser(ctx context.Context, userID UserID, password *string, description *string, authGroup *AuthGroup, userAllow []UserAllowID) error {
+	data := url.Values{}
+
+	if password != nil {
+		data.Set("epassword", *password)
+		data.Set("epassword_verify", *password)
+	}
+
+	if description != nil {
+		data.Set("description", *description)
+	}
+
+	if authGroup != nil {
+		data.Set("auth_group", strconv.Itoa(int(*authGroup)))
+	}
+
+	if userAllow != nil {
+		var userAllowFormatted []string
+		if len(userAllow) > 0 {
+			userAllowFormatted = make([]string, 0, len(userAllowFormatted))
+			for _, id := range userAllow {
+				userAllowFormatted = append(userAllowFormatted, strconv.Itoa(int(id)))
+			}
+		} else {
+			userAllowFormatted = []string{""}
+		}
+		data["user_allow"] = userAllowFormatted
+	}
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"POST",
+		fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID))),
+		strings.NewReader(data.Encode()),
+	)
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(c.username, c.password)
+	req.Header.Set(headerContentType, mimeForm)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf(errorTidyDNS, res.Status)
+	}
+
+	var user userCreate
+	err = json.NewDecoder(res.Body).Decode(&user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *tidyDNSClient) DeleteInternalUser(ctx context.Context, userID UserID) error {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"DELETE",
+		fmt.Sprintf("%s/=/user/%s", c.baseURL, strconv.Itoa(int(userID))),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	req.SetBasicAuth(c.username, c.password)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf(errorTidyDNS, res.Status)
+	}
+
+	return nil
 }
 
 func New(baseURL, username, password string) TidyDNSClient {
