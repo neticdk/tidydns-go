@@ -54,3 +54,23 @@ type recordList struct {
 	Status      interface{} `json:"status"`
 	Location    LocationID  `json:"location_id"`
 }
+
+type userCreate struct {
+	Data struct {
+		Id int `json:"id"`
+	} `json:"data"`
+	Status string `json:"status"`
+}
+
+type userRead struct {
+	ModifiedBy        string          `json:"modified_by"`
+	Description       string          `json:"description"`
+	ModifiedDate      string          `json:"modified_date"`
+	Username          string          `json:"username"`
+	AuthGroup         string          `json:"auth_group"`
+	Name              string          `json:"name"`
+	Epassword         string          `json:"epassword"`
+	PasswdChangedDate string          `json:"passwd_changed_date"`
+	Id                int             `json:"id"`
+	Groups            []UserInfoGroup `json:"groups"`
+}

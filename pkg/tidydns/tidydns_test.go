@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -100,11 +101,16 @@ const readResponse = `{
   "brother_destination": null
 }`
 
+const userCreateResponse = `{"data":{"id":144},"status":"0"}`
+const userReadResponse = `{"modified_by":"jra-api-test","description":"Awesome test user","modified_date":"2024-12-03 14:17:22","username":"jra-test-user","auth_group":"User","name":"jra-test-user","epassword":"*****","passwd_changed_date":"2024-12-03 14:17:22","id":148,"groups":[{"groupname":"user","name":"User","notes":null,"id":2,"description":null}]}`
+const userUpdateResponse = `{"status":"0","data":{"id":146}}`
+const userDeleteResponse = `{"status":"0"}`
+
 func TestGetSubnetIDs(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "10.68.0.128/26", req.URL.Query().Get("subnet"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(subnetResponse))
+		_, _ = rw.Write([]byte(subnetResponse))
 	}))
 	defer server.Close()
 
@@ -120,7 +126,7 @@ func TestGetFreeIP(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Path, "1185")
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(freeIPResponse))
+		_, _ = rw.Write([]byte(freeIPResponse))
 	}))
 	defer server.Close()
 
@@ -133,7 +139,7 @@ func TestGetFreeIP(t *testing.T) {
 func TestCreateDHCPInterfaceV1(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(createResponseV1))
+		_, _ = rw.Write([]byte(createResponseV1))
 	}))
 	defer server.Close()
 
@@ -152,7 +158,7 @@ func TestCreateDHCPInterfaceV1(t *testing.T) {
 func TestCreateDHCPInterfaceV2(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(createResponseV2))
+		_, _ = rw.Write([]byte(createResponseV2))
 	}))
 	defer server.Close()
 
@@ -172,7 +178,7 @@ func TestReadDHCPInterface(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "30641", req.URL.Query().Get("id"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(readResponse))
+		_, _ = rw.Write([]byte(readResponse))
 	}))
 	defer server.Close()
 
@@ -187,7 +193,7 @@ func TestUpdateDHCPInterfaceName(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Path, "30641")
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(createResponseV1))
+		_, _ = rw.Write([]byte(createResponseV1))
 	}))
 	defer server.Close()
 
@@ -201,7 +207,7 @@ func TestDeleteDHCPInterface(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Path, "30641")
 		assert.Equal(t, "DELETE", req.Method)
-		rw.Write([]byte(createResponseV1))
+		_, _ = rw.Write([]byte(createResponseV1))
 	}))
 	defer server.Close()
 
@@ -214,7 +220,7 @@ func TestFindZoneID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Contains(t, req.URL.Query().Get("name"), "hackerdays.trifork.dev")
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(zoneSearchResponse))
+		_, _ = rw.Write([]byte(zoneSearchResponse))
 	}))
 	defer server.Close()
 
@@ -226,7 +232,7 @@ func TestFindZoneID(t *testing.T) {
 
 func TestCreateRecord(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte(readRecordListResponse))
+		_, _ = rw.Write([]byte(readRecordListResponse))
 	}))
 	defer server.Close()
 
@@ -247,7 +253,7 @@ func TestReadRecord(t *testing.T) {
 		assert.Contains(t, req.URL.Path, "2861")
 		assert.Contains(t, req.URL.Path, "64694")
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(readRecordResponse))
+		_, _ = rw.Write([]byte(readRecordResponse))
 	}))
 	defer server.Close()
 
@@ -266,7 +272,7 @@ func TestDeleteRecord(t *testing.T) {
 		assert.Contains(t, req.URL.Path, "2861")
 		assert.Contains(t, req.URL.Path, "64694")
 		assert.Equal(t, "DELETE", req.Method)
-		rw.Write([]byte(createResponse))
+		_, _ = rw.Write([]byte(createResponse))
 	}))
 	defer server.Close()
 
@@ -278,7 +284,7 @@ func TestDeleteRecord(t *testing.T) {
 func TestUpdateRecord(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "POST", req.Method)
-		rw.Write([]byte(readRecordListResponse))
+		_, _ = rw.Write([]byte(readRecordListResponse))
 	}))
 	defer server.Close()
 
@@ -296,7 +302,7 @@ func TestFindRecord(t *testing.T) {
 		assert.Equal(t, "prod1-api.trifork.shared", req.URL.Query().Get("name"))
 		assert.Equal(t, "2861", req.URL.Query().Get("zone"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(findRecordResponse))
+		_, _ = rw.Write([]byte(findRecordResponse))
 	}))
 	defer server.Close()
 
@@ -310,7 +316,7 @@ func TestFindRecord(t *testing.T) {
 func TestListZones(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(listZonesResponse))
+		_, _ = rw.Write([]byte(listZonesResponse))
 	}))
 	defer server.Close()
 
@@ -324,7 +330,7 @@ func TestListRecords(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "2861", req.URL.Query().Get("zone_id"))
 		assert.Equal(t, "GET", req.Method)
-		rw.Write([]byte(listRecordsResponse))
+		_, _ = rw.Write([]byte(listRecordsResponse))
 	}))
 	defer server.Close()
 
@@ -332,6 +338,107 @@ func TestListRecords(t *testing.T) {
 	records, err := c.ListRecords(context.Background(), 2861)
 	assert.NoError(t, err)
 	assert.Equal(t, len(records), 22)
+}
+
+func TestCreateInternalUser(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.NoError(t, req.ParseForm())
+		assert.Equal(t, "/=/user/new", req.URL.Path)
+		assert.Equal(t, "POST", req.Method)
+		assert.Equal(t, "test_user", req.PostForm.Get("username"))
+		assert.Equal(t, "test_password", req.PostForm.Get("epassword"))
+		assert.Equal(t, "test_password", req.PostForm.Get("epassword_verify"))
+		assert.Equal(t, "0", req.PostForm.Get("change_password_on_first_login"))
+		assert.Equal(t, "2", req.PostForm.Get("auth_group"))
+		assert.Equal(t, "", req.PostForm.Get("user_allow"))
+		_, _ = rw.Write([]byte(userCreateResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	id, err := c.CreateInternalUser(
+		context.Background(),
+		"test_user",
+		"test_password",
+		"description",
+		false,
+		AuthGroupUser,
+		[]UserAllowID{},
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, id, UserID(144))
+}
+
+func TestGetInternalUser(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/=/user/144", req.URL.Path)
+		assert.Equal(t, "GET", req.Method)
+		_, _ = rw.Write([]byte(userReadResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	userInfo, err := c.GetInternalUser(context.Background(), 144)
+	assert.NoError(t, err)
+	assert.Equal(t, userInfo.AuthGroup, AuthGroupUser)
+	assert.Equal(t, userInfo.Description, "Awesome test user")
+	assert.Equal(t, len(userInfo.Groups), 1)
+	assert.Equal(t, userInfo.Groups[0].Id, 2)
+	assert.Equal(t, userInfo.Groups[0].Name, "User")
+	assert.Nil(t, userInfo.Groups[0].Notes)
+	assert.Equal(t, userInfo.Groups[0].GroupName, "user")
+	assert.Nil(t, userInfo.Groups[0].Description)
+	assert.Equal(t, userInfo.Id, UserID(148))
+	assert.Equal(t, userInfo.ModifiedBy, "jra-api-test")
+	assert.Equal(t, userInfo.ModifiedDate, time.Date(2024, 12, 03, 14, 17, 22, 0, time.UTC))
+	assert.Equal(t, userInfo.Name, "jra-test-user")
+	assert.Equal(t, userInfo.PasswdChangedDate, time.Date(2024, 12, 03, 14, 17, 22, 0, time.UTC))
+	assert.Equal(t, userInfo.Username, "jra-test-user")
+}
+
+func toPtr[T any](s T) *T {
+	return &s
+}
+
+func TestUpdateInternalUser(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.NoError(t, req.ParseForm())
+		assert.Equal(t, "/=/user/146", req.URL.Path)
+		assert.Equal(t, "POST", req.Method)
+		assert.False(t, req.PostForm.Has("username"))
+		assert.Equal(t, "test_password", req.PostForm.Get("epassword"))
+		assert.Equal(t, "test_password", req.PostForm.Get("epassword_verify"))
+		assert.False(t, req.PostForm.Has("change_password_on_first_login"))
+		assert.Equal(t, "2", req.PostForm.Get("auth_group"))
+		assert.Equal(t, "", req.PostForm.Get("user_allow"))
+		assert.Equal(t, "desc", req.PostForm.Get("description"))
+		_, _ = rw.Write([]byte(userUpdateResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	err := c.UpdateInternalUser(
+		context.Background(),
+		UserID(146),
+		toPtr("test_password"),
+		toPtr("desc"),
+		toPtr(AuthGroupUser),
+		[]UserAllowID{},
+	)
+	assert.NoError(t, err)
+}
+
+func TestDeleteInternalUser(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "/=/user/144", req.URL.Path)
+		assert.Equal(t, "DELETE", req.Method)
+		_, _ = rw.Write([]byte(userDeleteResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	err := c.DeleteInternalUser(context.Background(), UserID(144))
+	assert.NoError(t, err)
 }
 
 const zoneSearchResponse = `[
