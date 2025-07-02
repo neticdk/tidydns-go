@@ -663,7 +663,7 @@ func (c *tidyDNSClient) CreateRecord(ctx context.Context, zoneID int, info Recor
 		return 0, fmt.Errorf(errorTidyDNS, res.Status)
 	}
 
-	recordMergeUrl := fmt.Sprintf("%s/=/record_merged?zone_id=%d", c.baseURL, zoneID)
+	recordMergeUrl := fmt.Sprintf("%s/=/record_merged?type=json&zone_id=%d&showall=1", c.baseURL, zoneID)
 	req, err = http.NewRequestWithContext(
 		ctx,
 		"GET",
