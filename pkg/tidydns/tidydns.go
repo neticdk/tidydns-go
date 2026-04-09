@@ -15,6 +15,7 @@ import (
 type TidyDNSClient interface {
 	GetSubnetIDs(ctx context.Context, subnetCIDR string) (*SubnetIDs, error)
 	GetFreeIP(ctx context.Context, subnetID int) (string, error)
+	ListDHCPInterfaces(ctx context.Context, subnetID int) ([]*InterfaceInfo, error)
 	CreateDHCPInterface(ctx context.Context, createInfo CreateInfo) (int, error)
 	ReadDHCPInterface(ctx context.Context, interfaceID int) (*InterfaceInfo, error)
 	UpdateDHCPInterfaceName(ctx context.Context, interfaceID int, interfaceName string) (int, error)
@@ -45,6 +46,7 @@ type SubnetIDs struct {
 }
 
 type InterfaceInfo struct {
+	ID            int
 	InterfaceIP   string
 	Interfacename string
 }
@@ -435,6 +437,29 @@ func (c *tidyDNSClient) GetFreeIP(ctx context.Context, subnetID int) (string, er
 	return freeIP.Data.IPAddress, nil
 }
 
+func (c *tidyDNSClient) ListDHCPInterfaces(ctx context.Context, subnetID int) ([]*InterfaceInfo, error) {
+	var interfaces []interfaceRead
+	dhcpInterfaceUrl := fmt.Sprintf("%s/=/dhcp_interface/?subnet_id=%d&type=json", c.baseURL, subnetID)
+	err := c.getData(
+		ctx,
+		dhcpInterfaceUrl,
+		&interfaces,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*InterfaceInfo, 0, len(interfaces))
+	for _, iface := range interfaces {
+		result = append(result, &InterfaceInfo{
+			ID:            iface.ID,
+			InterfaceIP:   iface.Destination,
+			Interfacename: iface.Name,
+		})
+	}
+	return result, nil
+}
+
 func (c *tidyDNSClient) CreateDHCPInterface(ctx context.Context, createInfo CreateInfo) (int, error) {
 	data := url.Values{
 		"subnet_id":   {strconv.Itoa(createInfo.SubnetID)},
@@ -516,6 +541,7 @@ func (c *tidyDNSClient) ReadDHCPInterface(ctx context.Context, interfaceID int) 
 	}
 
 	return &InterfaceInfo{
+		ID:            interfaceRead.ID,
 		InterfaceIP:   interfaceRead.Destination,
 		Interfacename: interfaceRead.Name,
 	}, nil
