@@ -17,15 +17,16 @@ type dhcpFreeIPData struct {
 	IPAddress string `json:"ip_address"`
 }
 
+type interfaceRead struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Destination string `json:"destination"`
+}
+
 type interfaceCreate struct {
 	Status   interface{} `json:"status"`
 	ID       int         `json:"id"`
 	SubnetID int         `json:"subnet_id"`
-}
-
-type interfaceRead struct {
-	Name        string `json:"name"`
-	Destination string `json:"destination"`
 }
 
 type zoneInfo struct {

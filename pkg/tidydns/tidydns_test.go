@@ -136,6 +136,27 @@ func TestGetFreeIP(t *testing.T) {
 	assert.Equal(t, "10.68.0.134", ip)
 }
 
+func TestListDHCPInterfaces(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		assert.Equal(t, "1185", req.URL.Query().Get("subnet_id"))
+		assert.Equal(t, "json", req.URL.Query().Get("type"))
+		assert.Equal(t, "GET", req.Method)
+		_, _ = rw.Write([]byte(listDHCPInterfacesResponse))
+	}))
+	defer server.Close()
+
+	c := New(server.URL, "username", "password")
+	interfaces, err := c.ListDHCPInterfaces(context.Background(), 1185)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(interfaces))
+	assert.Equal(t, 30641, interfaces[0].ID)
+	assert.Equal(t, "test-tal", interfaces[0].Interfacename)
+	assert.Equal(t, "10.68.0.134", interfaces[0].InterfaceIP)
+	assert.Equal(t, 30642, interfaces[1].ID)
+	assert.Equal(t, "test-tal-2", interfaces[1].Interfacename)
+	assert.Equal(t, "10.68.0.135", interfaces[1].InterfaceIP)
+}
+
 func TestCreateDHCPInterfaceV1(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "POST", req.Method)
@@ -185,6 +206,7 @@ func TestReadDHCPInterface(t *testing.T) {
 	c := New(server.URL, "username", "password")
 	info, err := c.ReadDHCPInterface(context.Background(), 30641)
 	assert.NoError(t, err)
+	assert.Equal(t, 30641, info.ID)
 	assert.Equal(t, "10.68.0.134", info.InterfaceIP)
 	assert.Equal(t, "test-tal", info.Interfacename)
 }
@@ -440,6 +462,19 @@ func TestDeleteInternalUser(t *testing.T) {
 	err := c.DeleteInternalUser(context.Background(), UserID(144))
 	assert.NoError(t, err)
 }
+
+const listDHCPInterfacesResponse = `[
+  {
+    "id": 30641,
+    "name": "test-tal",
+    "destination": "10.68.0.134"
+  },
+  {
+    "id": 30642,
+    "name": "test-tal-2",
+    "destination": "10.68.0.135"
+  }
+]`
 
 const zoneSearchResponse = `[
   {
