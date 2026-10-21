@@ -322,7 +322,8 @@ func TestUpdateRecord(t *testing.T) {
 func TestFindRecord(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "prod1-api.trifork.shared", req.URL.Query().Get("name"))
-		assert.Equal(t, "2861", req.URL.Query().Get("zone"))
+		assert.Equal(t, "2861", req.URL.Query().Get("zone_id"))
+		assert.Equal(t, "1", req.URL.Query().Get("showall"))
 		assert.Equal(t, "GET", req.Method)
 		_, _ = rw.Write([]byte(findRecordResponse))
 	}))

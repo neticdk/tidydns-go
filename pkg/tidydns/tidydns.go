@@ -762,7 +762,10 @@ func (c *tidyDNSClient) UpdateRecord(ctx context.Context, zoneID int, recordID i
 
 func (c *tidyDNSClient) FindRecord(ctx context.Context, zoneID int, name string, rType RecordType) ([]*RecordInfo, error) {
 	var records []recordList
-	recordLookupUrl := fmt.Sprintf("%s/=/record?type=json&zone=%d&name=%s", c.baseURL, zoneID, name)
+	// TidyDNS filters on zone_id, matches name as a case-insensitive substring
+	// and returns at most 1000 rows unless showall is set. The exact name and
+	// type match happens below.
+	recordLookupUrl := fmt.Sprintf("%s/=/record?type=json&zone_id=%d&name=%s&showall=1", c.baseURL, zoneID, url.QueryEscape(name))
 	err := c.getData(
 		ctx,
 		recordLookupUrl,
